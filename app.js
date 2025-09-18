@@ -3,12 +3,14 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, o
 
 // 🔥 TODO: Pega tu configuración de Firebase aquí
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROJECT_ID.firebaseapp.com",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_PROJECT_ID.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
+  authDomain: "r-angell.firebaseapp.com",
+  projectId: "r-angell",
+  storageBucket: "r-angell.firebasestorage.app",
+  messagingSenderId: "609120128775",
+  appId: "1:609120128775:web:e4b90b051d988037f4ffa2",
+  measurementId: "G-HZMH0MCHY2"
+
 };
 
 const app = initializeApp(firebaseConfig);
@@ -42,3 +44,4 @@ onSnapshot(q, (snapshot) => {
     timeline.appendChild(div);
   });
 });
+
