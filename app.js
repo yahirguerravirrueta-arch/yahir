@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Configuración Firebase
@@ -22,37 +22,28 @@ const loginDiv = document.getElementById("loginDiv");
 const chatDiv = document.getElementById("chatDiv");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
-const nicknameInput = document.getElementById("nicknameInput");
 const loginBtn = document.getElementById("loginBtn");
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
 
-// Login / Registro simplificado (sin verificación)
+// Login / Register
 loginBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  const nickname = nicknameInput.value.trim();
+  if (!email || !password) return alert("Completa correo y contraseña");
 
-  if (!email || !password || !nickname) return alert("Completa todos los campos");
-
-  let user;
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    user = userCredential.user;
+    await signInWithEmailAndPassword(auth, email, password);
   } catch {
+    // Si no existe, crear cuenta
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      user = userCredential.user;
-      // Guardar apodo en Firestore
-      await setDoc(doc(db, "usuarios", user.uid), { nickname });
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Cuenta creada y logueada");
     } catch (err) {
       return alert("Error: " + err.message);
     }
   }
-
-  // Guardar o actualizar apodo
-  await setDoc(doc(db, "usuarios", user.uid), { nickname }, { merge: true });
 });
 
 // Detectar usuario logueado
@@ -78,6 +69,7 @@ function startChat(user) {
     await addDoc(collection(db, "notas"), {
       texto: text,
       fecha: serverTimestamp(),
+      autor: user.email,
       autorUID: user.uid,
       leido: false
     });
@@ -93,19 +85,12 @@ function startChat(user) {
     for (const docSnap of snapshot.docs) {
       const note = docSnap.data();
       const div = document.createElement("div");
-
-      // Clase para estilo tipo WhatsApp
-      div.classList.add("note", note.autorUID === user.uid ? "mine" : "theirs");
+      div.classList.add("note");
 
       const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
 
-      // Obtener apodo del autor
-      let displayName = "Anon";
-      const userDoc = await getDoc(doc(db, "usuarios", note.autorUID));
-      if (userDoc.exists()) displayName = userDoc.data().nickname;
-
       div.innerHTML = `
-        <span class="author">${displayName}:</span> 
+        <span class="author">${note.autor}:</span> 
         <span class="text">${note.texto}</span>
         <span class="date">${dateStr}</span>
         ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
@@ -121,6 +106,7 @@ function startChat(user) {
     }
   });
 }
+
 
 
 
