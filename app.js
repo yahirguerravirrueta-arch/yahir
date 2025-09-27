@@ -80,7 +80,7 @@ function startChat(user) {
     const text = input.value.trim();
     if (!text) return;
 
-    const username = user.displayName || user.email;
+    const username = user.displayName || usernameInput.value.trim();
 
     await addDoc(collection(db, "notas"), {
       texto: text,
@@ -122,6 +122,7 @@ function startChat(user) {
     }
   });
 }
+
 
 
 
