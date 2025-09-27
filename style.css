@@ -29,6 +29,10 @@ textarea {
   border: 1px solid #ccc;
 }
 
+input[type="file"] {
+  border-radius: 10px;
+}
+
 button {
   background: #e91e63;
   color: white;
@@ -54,4 +58,39 @@ button:hover {
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.note-img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.note-date {
+  display: block;
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 5px;
+  text-align: right;
+}
+
+.note-read {
+  color: green;
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+
+.note button {
+  margin-right: 5px;
+  background: #e91e63;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.note button:hover {
+  background: #d81b60;
 }
