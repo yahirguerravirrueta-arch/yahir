@@ -1,7 +1,22 @@
-// Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  serverTimestamp,
+  query,
+  orderBy,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Configuración Firebase
 const firebaseConfig = {
@@ -14,125 +29,114 @@ const firebaseConfig = {
   measurementId: "G-HZMH0MCHY2"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
+const auth = getAuth();
 
+// Referencias del DOM
 const loginDiv = document.getElementById("loginDiv");
 const chatDiv = document.getElementById("chatDiv");
-const loginBtn = document.getElementById("loginBtn");
 const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
-const noteForm = document.getElementById("noteForm");
-const noteInput = document.getElementById("noteInput");
+const loginBtn = document.getElementById("loginBtn");
+const form = document.getElementById("noteForm");
+const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
 
-let currentUser = null;
-
-// 🔹 LOGIN / REGISTER
+// Login / Registro
 loginBtn.addEventListener("click", async () => {
-  const username = usernameInput.value;
-  const password = passwordInput.value;
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
 
   if (!username || !password) {
-    alert("Por favor ingresa un usuario y contraseña");
-    return;
+    return alert("Completa nombre de usuario y contraseña");
   }
 
-  // Generamos un "correo falso" para Firebase Auth
-  const email = username + "@diario.com";
+  // Crear un correo ficticio para Firebase Auth
+  const fakeEmail = `${username}@miapp.com`;
 
   try {
     // Intentar login
-    await signInWithEmailAndPassword(auth, email, password);
-    currentUser = username;
-    mostrarChat();
-  } catch (error) {
-    // Si falla, registrar
+    await signInWithEmailAndPassword(auth, fakeEmail, password);
+    // Guardar nombre de usuario en displayName
+    await updateProfile(auth.currentUser, { displayName: username });
+  } catch {
+    // Si no existe, crear cuenta
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      currentUser = username;
-      mostrarChat();
-    } catch (e) {
-      alert("Error: " + e.message);
+      await createUserWithEmailAndPassword(auth, fakeEmail, password);
+      alert("Cuenta creada y logueada");
+      await updateProfile(auth.currentUser, { displayName: username });
+    } catch (err) {
+      return alert("Error: " + err.message);
     }
   }
 });
 
-function mostrarChat() {
-  loginDiv.style.display = "none";
-  chatDiv.style.display = "block";
-}
-
-// 🔹 ENVIAR MENSAJE
-noteForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!currentUser) return;
-
-  await addDoc(collection(db, "notes"), {
-    text: noteInput.value,
-    author: currentUser,
-    timestamp: serverTimestamp(),
-    read: false
-  });
-
-  noteInput.value = "";
+// Detectar usuario logueado
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginDiv.style.display = "none";
+    chatDiv.style.display = "block";
+    startChat(user);
+  } else {
+    loginDiv.style.display = "block";
+    chatDiv.style.display = "none";
+  }
 });
 
-// 🔹 ESCUCHAR MENSAJES
-const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
-onSnapshot(q, (snapshot) => {
-  timeline.innerHTML = "";
-  snapshot.forEach((docSnap) => {
-    const note = docSnap.data();
-    const div = document.createElement("div");
-    div.classList.add("note");
+// Función principal del chat
+function startChat(user) {
+  // Enviar mensaje
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
 
-    div.innerHTML = `
-      <div class="author">${note.author}:</div>
-      <div class="text">${note.text}</div>
-      <span class="date">${note.timestamp?.toDate().toLocaleString() || ""}</span>
-      ${note.read ? '<span class="note-read">✔ Visto</span>' : ""}
-    `;
+    const username = user.displayName || user.email;
 
-    // Marcar como leído si es de otra persona
-    if (note.author !== currentUser && !note.read) {
-      updateDoc(doc(db, "notes", docSnap.id), { read: true });
+    await addDoc(collection(db, "notas"), {
+      texto: text,
+      fecha: serverTimestamp(),
+      autor: username,
+      autorUID: user.uid,
+      leido: false
+    });
+
+    input.value = "";
+  });
+
+  // Escuchar cambios en tiempo real
+  const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
+
+  onSnapshot(q, async (snapshot) => {
+    timeline.innerHTML = "";
+
+    for (const docSnap of snapshot.docs) {
+      const note = docSnap.data();
+      const div = document.createElement("div");
+      div.classList.add("note");
+
+      const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
+
+      div.innerHTML = `
+        <span class="author">${note.autor}:</span>
+        <span class="text">${note.texto}</span>
+        <span class="date">${dateStr}</span>
+        ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
+      `;
+
+      timeline.appendChild(div);
+
+      // Marcar como leído si el mensaje es de otro usuario
+      if (!note.leido && note.autorUID !== user.uid) {
+        const docRef = doc(db, "notas", docSnap.id);
+        updateDoc(docRef, { leido: true }).catch(err => console.error(err));
+      }
     }
-
-    timeline.appendChild(div);
   });
-});
-
-// 🔹 CONTADOR DE DÍAS JUNTOS ❤️
-function actualizarContador() {
-  // 📌 Cambia esta fecha al día que quieras que empiece en "Día 1"
-  const inicio = new Date("2025-09-27");
-  const hoy = new Date();
-
-  // Diferencia en días
-  const diffTime = hoy.setHours(0,0,0,0) - inicio.setHours(0,0,0,0);
-  const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-  document.getElementById("contador").textContent =
-    `❤️ Hoy es el Día ${dias} juntos ❤️`;
 }
 
-actualizarContador();
 
-// Recalcular a medianoche
-function programarActualizacion() {
-  const ahora = new Date();
-  const msHastaMedianoche =
-    new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 0, 0, 0) - ahora;
-
-  setTimeout(() => {
-    actualizarContador();
-    programarActualizacion();
-  }, msHastaMedianoche);
-}
-programarActualizacion();
 
 
 
