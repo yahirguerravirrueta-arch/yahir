@@ -104,7 +104,9 @@ function startChat(user) {
     for (const docSnap of snapshot.docs) {
       const note = docSnap.data();
       const div = document.createElement("div");
-      div.classList.add("note");
+
+      // Determinar clase para estilo WhatsApp
+      div.classList.add("note", note.autorUID === user.uid ? "mine" : "theirs");
 
       const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
 
@@ -130,6 +132,8 @@ function startChat(user) {
     }
   });
 }
+
+
 
 
 
