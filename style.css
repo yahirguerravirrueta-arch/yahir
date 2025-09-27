@@ -44,32 +44,16 @@ button:hover {
   gap: 15px;
 }
 
-/* Mensajes estilo WhatsApp */
 .note {
-  max-width: 80%;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.note.mine {
-  background: #e91e63;
-  color: white;
-  margin-left: auto;
-  text-align: right;
-}
-
-.note.theirs {
   background: white;
-  color: black;
-  margin-right: auto;
-  text-align: left;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .note .author {
   font-weight: bold;
-  display: block;
+  color: #e91e63;
 }
 
 .note .date {
@@ -84,6 +68,8 @@ button:hover {
   font-size: 0.9em;
   margin-left: 5px;
 }
+
+
 
 
 
