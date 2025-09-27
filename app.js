@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// 🔥 Configuración de Firebase
+// Configuración Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
   authDomain: "r-angell.firebaseapp.com",
@@ -13,41 +13,101 @@ const firebaseConfig = {
   measurementId: "G-HZMH0MCHY2"
 };
 
-// Inicializar Firebase y Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth();
 
-// Referencias al DOM
+// DOM references
+const loginDiv = document.getElementById("loginDiv");
+const chatDiv = document.getElementById("chatDiv");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginBtn = document.getElementById("loginBtn");
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
 
-// Enviar mensaje
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const text = input.value.trim();
-  if (!text) return;
+// Login / Register
+loginBtn.addEventListener("click", async () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  if (!email || !password) return alert("Completa correo y contraseña");
 
-  await addDoc(collection(db, "notas"), {
-    texto: text,
-    fecha: serverTimestamp()
-  });
-
-  input.value = "";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch {
+    // Si no existe, crear cuenta
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Cuenta creada y logueada");
+    } catch (err) {
+      return alert("Error: " + err.message);
+    }
+  }
 });
 
-// Escuchar cambios en tiempo real y actualizar el timeline
-const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
-onSnapshot(q, (snapshot) => {
-  timeline.innerHTML = "";
-  snapshot.forEach(doc => {
-    const note = doc.data();
-    const div = document.createElement("div");
-    div.classList.add("note");
-    div.textContent = note.texto;
-    timeline.appendChild(div);
-  });
+// Detectar usuario logueado
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginDiv.style.display = "none";
+    chatDiv.style.display = "block";
+    startChat(user);
+  } else {
+    loginDiv.style.display = "block";
+    chatDiv.style.display = "none";
+  }
 });
+
+// Función principal del chat
+function startChat(user) {
+  // Enviar mensaje
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    await addDoc(collection(db, "notas"), {
+      texto: text,
+      fecha: serverTimestamp(),
+      autor: user.email,
+      autorUID: user.uid,
+      leido: false
+    });
+
+    input.value = "";
+  });
+
+  // Escuchar cambios en tiempo real
+  const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
+  onSnapshot(q, async (snapshot) => {
+    timeline.innerHTML = "";
+
+    for (const docSnap of snapshot.docs) {
+      const note = docSnap.data();
+      const div = document.createElement("div");
+      div.classList.add("note");
+
+      const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
+
+      div.innerHTML = `
+        <span class="author">${note.autor}:</span> 
+        <span class="text">${note.texto}</span>
+        <span class="date">${dateStr}</span>
+        ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
+      `;
+
+      timeline.appendChild(div);
+
+      // Marcar como leído si el mensaje es de otro usuario
+      if (!note.leido && note.autorUID !== user.uid) {
+        const docRef = doc(db, "notas", docSnap.id);
+        updateDoc(docRef, { leido: true }).catch(err => console.error(err));
+      }
+    }
+  });
+}
+
+
 
 
 
