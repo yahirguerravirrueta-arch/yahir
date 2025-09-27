@@ -1,8 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } 
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // Configuración Firebase
 const firebaseConfig = {
@@ -17,16 +15,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-// Preguntar nombre al inicio
+// Nombre del usuario
 let userName = prompt("Escribe tu nombre o iniciales para el diario:");
 if (!userName) userName = "Anon";
 
-// Referencias al DOM
+// Referencias DOM
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
-const imageInput = document.getElementById("imageInput");
 const timeline = document.getElementById("timeline");
 const chatBubble = document.getElementById("chat-bubble");
 const chatWindow = document.getElementById("chat-window");
@@ -40,25 +36,16 @@ chatBubble.addEventListener("click", () => {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const text = input.value.trim();
-  if (!text && !imageInput.files[0]) return;
-
-  let imageUrl = "";
-  if (imageInput.files[0]) {
-    const imageRef = ref(storage, `images/${Date.now()}_${imageInput.files[0].name}`);
-    await uploadBytes(imageRef, imageInput.files[0]);
-    imageUrl = await getDownloadURL(imageRef);
-  }
+  if (!text) return;
 
   await addDoc(collection(db, "notas"), {
     texto: text,
-    imagen: imageUrl,
     fecha: serverTimestamp(),
     leido: false,
     autor: userName
   });
 
   input.value = "";
-  imageInput.value = "";
 });
 
 // Escuchar cambios en tiempo real
@@ -78,7 +65,6 @@ onSnapshot(q, (snapshot) => {
 
     div.innerHTML = `
       <p><strong>${note.autor}:</strong> ${note.texto}</p>
-      ${note.imagen ? `<img src="${note.imagen}" class="note-img">` : ""}
       <span class="note-date">${date}</span>
       ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
     `;
@@ -107,10 +93,8 @@ onSnapshot(q, (snapshot) => {
     // Marcar como leído y notificar si es de otro
     if (!note.leido && note.autor !== userName) {
       await doc.ref.update({ leido: true });
-      alert(`Nuevo mensaje de ${note.autor}: ${note.texto}`);
-    }
-  });
-});
+      alert(`Nuevo mensaje de ${note.autor}: ${note.text
+
 
 
 
