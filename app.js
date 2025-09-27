@@ -1,95 +1,69 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+body {
+  font-family: Arial, sans-serif;
+  background: #fbeff1;
+  margin: 0;
+  padding: 0;
+}
 
-// 🔥 Configuración de Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
-  authDomain: "r-angell.firebaseapp.com",
-  projectId: "r-angell",
-  storageBucket: "r-angell.firebasestorage.app",
-  messagingSenderId: "609120128775",
-  appId: "1:609120128775:web:e4b90b051d988037f4ffa2",
-  measurementId: "G-HZMH0MCHY2"
-};
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
 
-// Inicializar Firebase y Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+h1 {
+  text-align: center;
+  color: #e91e63;
+}
 
-// Pedir nombre al usuario
-let userName = prompt("Ingresa tu nombre o iniciales para el diario:");
-if (!userName) userName = "Anon";
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-// Referencias al DOM
-const form = document.getElementById("noteForm");
-const input = document.getElementById("noteInput");
-const timeline = document.getElementById("timeline");
+textarea {
+  resize: none;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
 
-// Enviar mensaje
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const text = input.value.trim();
-  if (!text) return;
+button {
+  background: #e91e63;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
 
-  await addDoc(collection(db, "notas"), {
-    texto: text,
-    fecha: serverTimestamp(),
-    autor: userName
-  });
+button:hover {
+  background: #d81b60;
+}
 
-  input.value = "";
-});
+#timeline {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 15px;
+}
 
-// Escuchar cambios en tiempo real y actualizar el timeline
-const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
-onSnapshot(q, (snapshot) => {
-  timeline.innerHTML = "";
-  snapshot.forEach(doc => {
-    const note = doc.data();
-    const div = document.createElement("div");
-    div.classList.add("note");
+.note {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-    // Convertir fecha
-    const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
-
-    div.innerHTML = `
-      <span class="author">${note.autor}:</span> 
-      <span class="text">${note.texto}</span>
-      <span class="date">${dateStr}</span>
-    `;
-
-    timeline.appendChild(div);
-  });
-});
+.note small {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: gray;
+}
 
 
-index.html
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diario Compartido 💌</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>📖 Nuestro Diario</h1>
-    <form id="noteForm">
-      <textarea id="noteInput" placeholder="Escribe algo bonito..." required></textarea>
-      <button type="submit">💌 Enviar</button>
-    </form>
-    <div id="timeline"></div>
-  </div>
-
-  <!-- Firebase -->
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
-  <script type="module" src="app.js"></script>
-</body>
-</html>
 
 
 
