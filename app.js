@@ -1,67 +1,55 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #fbeff1;
-  margin: 0;
-  padding: 0;
-}
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-.container {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-}
+// 🔥 Configuración de Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
+  authDomain: "r-angell.firebaseapp.com",
+  projectId: "r-angell",
+  storageBucket: "r-angell.firebasestorage.app",
+  messagingSenderId: "609120128775",
+  appId: "1:609120128775:web:e4b90b051d988037f4ffa2",
+  measurementId: "G-HZMH0MCHY2"
+};
 
-h1 {
-  text-align: center;
-  color: #e91e63;
-}
+// Inicializar Firebase y Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+// Referencias al DOM
+const form = document.getElementById("noteForm");
+const input = document.getElementById("noteInput");
+const timeline = document.getElementById("timeline");
 
-textarea {
-  resize: none;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-}
+// Enviar mensaje
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
 
-button {
-  background: #e91e63;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-}
+  await addDoc(collection(db, "notas"), {
+    texto: text,
+    fecha: serverTimestamp()
+  });
 
-button:hover {
-  background: #d81b60;
-}
+  input.value = "";
+});
 
-#timeline {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 15px;
-}
+// Escuchar cambios en tiempo real y actualizar el timeline
+const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
+onSnapshot(q, (snapshot) => {
+  timeline.innerHTML = "";
+  snapshot.forEach(doc => {
+    const note = doc.data();
+    const div = document.createElement("div");
+    div.classList.add("note");
+    div.textContent = note.texto;
+    timeline.appendChild(div);
+  });
+});
 
-.note {
-  background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
 
-.note small {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.8em;
-  color: gray;
-}
 
 
 
