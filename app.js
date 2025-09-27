@@ -44,14 +44,14 @@ form.addEventListener("submit", async (e) => {
 
 // Escuchar cambios en tiempo real y actualizar el timeline
 const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
-onSnapshot(q, (snapshot) => {
+onSnapshot(q, async (snapshot) => {
   timeline.innerHTML = "";
-  snapshot.forEach(async (docSnap) => {
+
+  for (const docSnap of snapshot.docs) {
     const note = docSnap.data();
     const div = document.createElement("div");
     div.classList.add("note");
 
-    // Convertir fecha
     const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
 
     div.innerHTML = `
@@ -65,10 +65,12 @@ onSnapshot(q, (snapshot) => {
 
     // Marcar como leído si el mensaje es de otro usuario y aún no lo leyó
     if (!note.leido && note.autor !== userName) {
-      await updateDoc(doc(db, "notas", docSnap.id), { leido: true });
+      const docRef = doc(db, "notas", docSnap.id);
+      updateDoc(docRef, { leido: true }).catch(err => console.error(err));
     }
-  });
+  }
 });
+
 
 
 
