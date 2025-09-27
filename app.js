@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 🔥 Configuración de Firebase
@@ -35,7 +35,8 @@ form.addEventListener("submit", async (e) => {
   await addDoc(collection(db, "notas"), {
     texto: text,
     fecha: serverTimestamp(),
-    autor: userName
+    autor: userName,
+    leido: false
   });
 
   input.value = "";
@@ -45,8 +46,8 @@ form.addEventListener("submit", async (e) => {
 const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
 onSnapshot(q, (snapshot) => {
   timeline.innerHTML = "";
-  snapshot.forEach(doc => {
-    const note = doc.data();
+  snapshot.forEach(async (docSnap) => {
+    const note = docSnap.data();
     const div = document.createElement("div");
     div.classList.add("note");
 
@@ -57,11 +58,18 @@ onSnapshot(q, (snapshot) => {
       <span class="author">${note.autor}:</span> 
       <span class="text">${note.texto}</span>
       <span class="date">${dateStr}</span>
+      ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
     `;
 
     timeline.appendChild(div);
+
+    // Marcar como leído si el mensaje es de otro usuario y aún no lo leyó
+    if (!note.leido && note.autor !== userName) {
+      await updateDoc(doc(db, "notas", docSnap.id), { leido: true });
+    }
   });
 });
+
 
 
 
