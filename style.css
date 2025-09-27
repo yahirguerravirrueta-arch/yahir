@@ -16,15 +16,10 @@ h1 {
   color: #e91e63;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-textarea {
-  resize: none;
+input, textarea {
+  width: 100%;
   padding: 10px;
+  margin-bottom: 10px;
   border-radius: 10px;
   border: 1px solid #ccc;
 }
@@ -73,7 +68,6 @@ button:hover {
   font-size: 0.9em;
   margin-left: 5px;
 }
-
 
 
 
