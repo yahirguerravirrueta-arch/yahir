@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,21 +10,11 @@
 <body>
   <div class="container">
     <h1>📖 Nuestro Diario</h1>
-
-    <!-- Login con nombre -->
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="Tu nombre..." required>
-      <button type="submit">Entrar</button>
+    <form id="noteForm">
+      <textarea id="noteInput" placeholder="Escribe algo bonito..." required></textarea>
+      <button type="submit">💌 Enviar</button>
     </form>
-
-    <!-- Chat -->
-    <div id="chat" style="display:none;">
-      <form id="noteForm">
-        <textarea id="noteInput" placeholder="Escribe algo bonito..." required></textarea>
-        <button type="submit">💌 Enviar</button>
-      </form>
-      <div id="timeline"></div>
-    </div>
+    <div id="timeline"></div>
   </div>
 
   <!-- Firebase -->
