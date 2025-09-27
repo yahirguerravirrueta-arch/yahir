@@ -7,16 +7,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>📖 Nuestro Diario</h1>
-    
+  <!-- Burbuja de chat -->
+  <div id="chat-bubble">💌</div>
+  <div id="chat-window" class="hidden">
+    <h2>Chat 💬</h2>
     <!-- Formulario de notas -->
     <form id="noteForm">
       <textarea id="noteInput" placeholder="Escribe algo bonito..." required></textarea>
       <input type="file" id="imageInput" accept="image/*">
       <button type="submit">💌 Enviar</button>
     </form>
-
     <!-- Timeline de notas -->
     <div id="timeline"></div>
   </div>
@@ -28,6 +28,7 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
+
 
 
 
