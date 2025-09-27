@@ -56,16 +56,13 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.note .author {
-  font-weight: bold;
-  color: #e91e63;
+.note small {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: gray;
 }
 
-.note .date {
-  display: block;
-  font-size: 0.8em;
-  color: #999;
-  margin-top: 5px;
 
 
 
