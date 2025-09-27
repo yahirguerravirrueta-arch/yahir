@@ -1,24 +1,9 @@
+// Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  serverTimestamp,
-  query,
-  orderBy,
-  updateDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Configuración Firebase
+// 🔹 Configuración Firebase (usa la tuya)
 const firebaseConfig = {
   apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
   authDomain: "r-angell.firebaseapp.com",
@@ -31,110 +16,103 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth();
+const auth = getAuth(app);
 
-// Referencias del DOM
 const loginDiv = document.getElementById("loginDiv");
 const chatDiv = document.getElementById("chatDiv");
+const loginBtn = document.getElementById("loginBtn");
 const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
-const loginBtn = document.getElementById("loginBtn");
-const form = document.getElementById("noteForm");
-const input = document.getElementById("noteInput");
+const noteForm = document.getElementById("noteForm");
+const noteInput = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
 
-// Login / Registro
+let currentUser = null;
+
+// 🔹 LOGIN / REGISTER
 loginBtn.addEventListener("click", async () => {
-  const username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
-
-  if (!username || !password) {
-    return alert("Completa nombre de usuario y contraseña");
-  }
-
-  // Crear un correo ficticio para Firebase Auth
-  const fakeEmail = `${username}@miapp.com`;
+  const email = usernameInput.value + "@diario.com"; // se convierte en email
+  const password = passwordInput.value;
 
   try {
-    // Intentar login
-    await signInWithEmailAndPassword(auth, fakeEmail, password);
-    // Guardar nombre de usuario en displayName
-    await updateProfile(auth.currentUser, { displayName: username });
-  } catch {
-    // Si no existe, crear cuenta
+    // Intentar iniciar sesión
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    currentUser = usernameInput.value;
+    mostrarChat();
+  } catch (error) {
+    // Si falla, registrar
     try {
-      await createUserWithEmailAndPassword(auth, fakeEmail, password);
-      alert("Cuenta creada y logueada");
-      await updateProfile(auth.currentUser, { displayName: username });
-    } catch (err) {
-      return alert("Error: " + err.message);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      currentUser = usernameInput.value;
+      mostrarChat();
+    } catch (e) {
+      alert("Error: " + e.message);
     }
   }
 });
 
-// Detectar usuario logueado
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loginDiv.style.display = "none";
-    chatDiv.style.display = "block";
-    startChat(user);
-  } else {
-    loginDiv.style.display = "block";
-    chatDiv.style.display = "none";
-  }
-});
+function mostrarChat() {
+  loginDiv.style.display = "none";
+  chatDiv.style.display = "block";
+}
 
-// Función principal del chat
-function startChat(user) {
-  // Enviar mensaje
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text) return;
+// 🔹 ENVIAR MENSAJE
+noteForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
 
-    const username = user.displayName || user.email;
-
-    await addDoc(collection(db, "notas"), {
-      texto: text,
-      fecha: serverTimestamp(),
-      autor: username,
-      autorUID: user.uid,
-      leido: false
-    });
-
-    input.value = "";
+  await addDoc(collection(db, "notes"), {
+    text: noteInput.value,
+    author: currentUser,
+    timestamp: serverTimestamp(),
+    read: false
   });
 
-  // Escuchar cambios en tiempo real
-  const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
+  noteInput.value = "";
+});
 
-  onSnapshot(q, async (snapshot) => {
-    timeline.innerHTML = "";
+// 🔹 ESCUCHAR MENSAJES
+const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
+onSnapshot(q, (snapshot) => {
+  timeline.innerHTML = "";
+  snapshot.forEach((docSnap) => {
+    const note = docSnap.data();
+    const div = document.createElement("div");
+    div.classList.add("note");
 
-    for (const docSnap of snapshot.docs) {
-      const note = docSnap.data();
-      const div = document.createElement("div");
-      div.classList.add("note");
+    // Diferenciar burbuja
+    if (note.author === currentUser) {
+      div.classList.add("mine");
+    } else {
+      div.classList.add("theirs");
 
-      const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
-
-      div.innerHTML = `
-        <span class="author">${note.autor}:</span>
-        <span class="text">${note.texto}</span>
-        <span class="date">${dateStr}</span>
-        ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
-      `;
-
-      timeline.appendChild(div);
-
-      // Marcar como leído si el mensaje es de otro usuario
-      if (!note.leido && note.autorUID !== user.uid) {
-        const docRef = doc(db, "notas", docSnap.id);
-        updateDoc(docRef, { leido: true }).catch(err => console.error(err));
+      // Marcar como leído si no lo estaba
+      if (!note.read) {
+        updateDoc(doc(db, "notes", docSnap.id), { read: true });
       }
     }
+
+    div.innerHTML = `
+      <div class="author">${note.author}:</div>
+      <div class="text">${note.text}</div>
+      <span class="date">${note.timestamp?.toDate().toLocaleString() || ""}</span>
+      ${note.read ? '<span class="note-read">✔ Visto</span>' : ""}
+    `;
+
+    timeline.appendChild(div);
   });
+});
+
+// 🔹 CONTADOR DE DÍAS JUNTOS ❤️
+function actualizarContador() {
+  const inicio = new Date("2024-06-01"); // 📌 cámbiala a tu fecha
+  const hoy = new Date();
+  const diffTime = Math.abs(hoy - inicio);
+  const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  document.getElementById("contador").textContent =
+    `❤️ Llevamos ${dias} días juntos ❤️`;
 }
+actualizarContador();
 
 
 
