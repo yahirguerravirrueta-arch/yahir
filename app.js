@@ -1,6 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  onAuthStateChanged, 
+  updateProfile 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Configuración Firebase
 const firebaseConfig = {
@@ -37,17 +43,25 @@ loginBtn.addEventListener("click", async () => {
   if (!email || !password) return alert("Completa correo y contraseña");
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Intentar login
+    await signInWithEmailAndPassword(auth, email, password);
+
+    // Actualizar nickname si se ingresó
     if (nickname) {
-      await userCredential.user.updateProfile({ displayName: nickname });
+      await updateProfile(auth.currentUser, { displayName: nickname });
     }
+
   } catch {
+    // Si no existe, crear cuenta
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       alert("Cuenta creada y logueada");
+
+      // Guardar nickname
       if (nickname) {
-        await userCredential.user.updateProfile({ displayName: nickname });
+        await updateProfile(auth.currentUser, { displayName: nickname });
       }
+
     } catch (err) {
       return alert("Error: " + err.message);
     }
@@ -74,10 +88,17 @@ function startChat(user) {
     const text = input.value.trim();
     if (!text) return;
 
+    // Obtener nickname o email
+    let nickname = user.displayName;
+    if (!nickname) {
+      nickname = prompt("Elige un apodo para el chat:", user.email) || user.email;
+      await updateProfile(user, { displayName: nickname });
+    }
+
     await addDoc(collection(db, "notas"), {
       texto: text,
       fecha: serverTimestamp(),
-      autor: user.displayName || user.email,
+      autor: nickname,
       autorUID: user.uid,
       leido: false
     });
@@ -114,8 +135,6 @@ function startChat(user) {
     }
   });
 }
-
-
 
 
 
