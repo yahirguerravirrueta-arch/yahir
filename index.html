@@ -9,31 +9,20 @@
 <body>
   <div class="container">
     <h1>📖 Nuestro Diario</h1>
-
-    <!-- Login -->
-    <div id="loginDiv">
-      <input type="email" id="emailInput" placeholder="Correo electrónico">
-      <input type="password" id="passwordInput" placeholder="Contraseña">
-      <button id="loginBtn">Iniciar sesión / Registrarse</button>
-    </div>
-
-    <!-- Chat -->
-    <div id="chatDiv" style="display:none;">
-      <form id="noteForm">
-        <textarea id="noteInput" placeholder="Escribe algo bonito..." required></textarea>
-        <button type="submit">💌 Enviar</button>
-      </form>
-      <div id="timeline"></div>
-    </div>
-
+    <form id="noteForm">
+      <textarea id="noteInput" placeholder="Escribe algo bonito..." required></textarea>
+      <button type="submit">💌 Enviar</button>
+    </form>
+    <div id="timeline"></div>
   </div>
 
   <script type="module" src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
   <script type="module" src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
+
+
 
 
 
