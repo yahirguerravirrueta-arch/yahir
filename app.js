@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
+import { getFirestore, collection, addDoc, doc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, deleteDoc } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Configuración Firebase
@@ -20,7 +20,7 @@ const db = getFirestore(app);
 let userName = prompt("Escribe tu nombre o iniciales para el diario:");
 if (!userName) userName = "Anon";
 
-// Referencias DOM
+// DOM
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
@@ -48,18 +48,18 @@ form.addEventListener("submit", async (e) => {
   input.value = "";
 });
 
-// Escuchar cambios en tiempo real
+// Mostrar mensajes
 const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
 onSnapshot(q, (snapshot) => {
   timeline.innerHTML = "";
-  snapshot.forEach(async (doc) => {
-    const note = doc.data();
+  snapshot.forEach((docSnap) => {
+    const note = docSnap.data();
     const div = document.createElement("div");
     div.classList.add("note");
 
     const date = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
 
-    // Diferenciar mensajes según autor
+    // Diferenciar autor
     if (note.autor === userName) div.classList.add("my-note");
     else div.classList.add("other-note");
 
@@ -69,19 +69,19 @@ onSnapshot(q, (snapshot) => {
       ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
     `;
 
-    // Solo el autor puede editar/borrar
+    // Editar/borrar solo si eres el autor
     if (note.autor === userName) {
       const editBtn = document.createElement("button");
       editBtn.textContent = "✏️";
       editBtn.onclick = async () => {
         const newText = prompt("Editar nota:", note.texto);
-        if (newText) await doc.ref.update({ texto: newText });
+        if (newText) await updateDoc(doc(db, "notas", docSnap.id), { texto: newText });
       };
 
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "🗑️";
       deleteBtn.onclick = async () => {
-        if (confirm("¿Eliminar nota?")) await doc.ref.delete();
+        if (confirm("¿Eliminar nota?")) await deleteDoc(doc(db, "notas", docSnap.id));
       };
 
       div.appendChild(editBtn);
@@ -90,10 +90,13 @@ onSnapshot(q, (snapshot) => {
 
     timeline.appendChild(div);
 
-    // Marcar como leído y notificar si es de otro
+    // Marcar como leído si es de otro usuario
     if (!note.leido && note.autor !== userName) {
-      await doc.ref.update({ leido: true });
-      alert(`Nuevo mensaje de ${note.autor}: ${note.text
+      updateDoc(doc(db, "notas", docSnap.id), { leido: true });
+    }
+  });
+});
+
 
 
 
