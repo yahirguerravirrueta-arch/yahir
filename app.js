@@ -22,6 +22,7 @@ const loginDiv = document.getElementById("loginDiv");
 const chatDiv = document.getElementById("chatDiv");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
+const nicknameInput = document.getElementById("nicknameInput");
 const loginBtn = document.getElementById("loginBtn");
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
@@ -31,15 +32,22 @@ const timeline = document.getElementById("timeline");
 loginBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
+  const nickname = nicknameInput.value.trim() || null;
+
   if (!email || !password) return alert("Completa correo y contraseña");
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if (nickname) {
+      await userCredential.user.updateProfile({ displayName: nickname });
+    }
   } catch {
-    // Si no existe, crear cuenta
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       alert("Cuenta creada y logueada");
+      if (nickname) {
+        await userCredential.user.updateProfile({ displayName: nickname });
+      }
     } catch (err) {
       return alert("Error: " + err.message);
     }
@@ -69,7 +77,7 @@ function startChat(user) {
     await addDoc(collection(db, "notas"), {
       texto: text,
       fecha: serverTimestamp(),
-      autor: user.email,
+      autor: user.displayName || user.email,
       autorUID: user.uid,
       leido: false
     });
