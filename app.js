@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Configuración Firebase
 const firebaseConfig = {
@@ -28,7 +28,7 @@ const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
 
-// Login / Registro
+// Login / Registro simplificado (sin verificación)
 loginBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
@@ -41,25 +41,14 @@ loginBtn.addEventListener("click", async () => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     user = userCredential.user;
   } catch {
-    // Crear cuenta si no existe
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       user = userCredential.user;
-      // Enviar correo de verificación
-      await sendEmailVerification(user);
-      alert("Cuenta creada. Verifica tu correo antes de usar el chat.");
       // Guardar apodo en Firestore
       await setDoc(doc(db, "usuarios", user.uid), { nickname });
-      return;
     } catch (err) {
       return alert("Error: " + err.message);
     }
-  }
-
-  // Verificar correo
-  if (!user.emailVerified) {
-    alert("Debes verificar tu correo antes de entrar al chat.");
-    return;
   }
 
   // Guardar o actualizar apodo
@@ -68,7 +57,7 @@ loginBtn.addEventListener("click", async () => {
 
 // Detectar usuario logueado
 onAuthStateChanged(auth, (user) => {
-  if (user && user.emailVerified) {
+  if (user) {
     loginDiv.style.display = "none";
     chatDiv.style.display = "block";
     startChat(user);
@@ -105,7 +94,7 @@ function startChat(user) {
       const note = docSnap.data();
       const div = document.createElement("div");
 
-      // Determinar clase para estilo WhatsApp
+      // Clase para estilo tipo WhatsApp
       div.classList.add("note", note.autorUID === user.uid ? "mine" : "theirs");
 
       const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
@@ -132,6 +121,8 @@ function startChat(user) {
     }
   });
 }
+
+
 
 
 
