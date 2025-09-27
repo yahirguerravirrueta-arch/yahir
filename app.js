@@ -38,14 +38,17 @@ form.addEventListener("submit", async (e) => {
   const text = input.value.trim();
   if (!text) return;
 
-  await addDoc(collection(db, "notas"), {
-    texto: text,
-    fecha: serverTimestamp(),
-    leido: false,
-    autor: userName
-  });
-
-  input.value = "";
+  try {
+    await addDoc(collection(db, "notas"), {
+      texto: text,
+      fecha: serverTimestamp(),
+      leido: false,
+      autor: userName
+    });
+    input.value = "";
+  } catch (err) {
+    console.error("Error al enviar mensaje:", err);
+  }
 });
 
 // Mostrar mensajes
@@ -96,7 +99,6 @@ onSnapshot(q, (snapshot) => {
     }
   });
 });
-
 
 
 
