@@ -3,15 +3,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Configuración Firebase (usa la tuya)
+// Configuración Firebase
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROJECT.firebaseapp.com",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_PROJECT.appspot.com",
-  messagingSenderId: "ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
+  authDomain: "r-angell.firebaseapp.com",
+  projectId: "r-angell",
+  storageBucket: "r-angell.firebasestorage.app",
+  messagingSenderId: "609120128775",
+  appId: "1:609120128775:web:e4b90b051d988037f4ffa2",
+  measurementId: "G-HZMH0MCHY2"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -131,6 +133,7 @@ function programarActualizacion() {
   }, msHastaMedianoche);
 }
 programarActualizacion();
+
 
 
 
