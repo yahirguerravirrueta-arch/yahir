@@ -68,6 +68,13 @@ button:hover {
   margin-top: 5px;
 }
 
+.note-read {
+  color: green;
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+
+
 
 
 
