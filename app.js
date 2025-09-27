@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Configuración Firebase
 const firebaseConfig = {
@@ -22,33 +22,53 @@ const loginDiv = document.getElementById("loginDiv");
 const chatDiv = document.getElementById("chatDiv");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
+const nicknameInput = document.getElementById("nicknameInput");
 const loginBtn = document.getElementById("loginBtn");
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
 
-// Login / Register
+// Login / Registro
 loginBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  if (!email || !password) return alert("Completa correo y contraseña");
+  const nickname = nicknameInput.value.trim();
 
+  if (!email || !password || !nickname) return alert("Completa todos los campos");
+
+  let user;
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    user = userCredential.user;
   } catch {
-    // Si no existe, crear cuenta
+    // Crear cuenta si no existe
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("Cuenta creada y logueada");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      user = userCredential.user;
+      // Enviar correo de verificación
+      await sendEmailVerification(user);
+      alert("Cuenta creada. Verifica tu correo antes de usar el chat.");
+      // Guardar apodo en Firestore
+      await setDoc(doc(db, "usuarios", user.uid), { nickname });
+      return;
     } catch (err) {
       return alert("Error: " + err.message);
     }
   }
+
+  // Verificar correo
+  if (!user.emailVerified) {
+    alert("Debes verificar tu correo antes de entrar al chat.");
+    return;
+  }
+
+  // Guardar o actualizar apodo
+  await setDoc(doc(db, "usuarios", user.uid), { nickname }, { merge: true });
 });
 
 // Detectar usuario logueado
 onAuthStateChanged(auth, (user) => {
-  if (user) {
+  if (user && user.emailVerified) {
     loginDiv.style.display = "none";
     chatDiv.style.display = "block";
     startChat(user);
@@ -69,7 +89,6 @@ function startChat(user) {
     await addDoc(collection(db, "notas"), {
       texto: text,
       fecha: serverTimestamp(),
-      autor: user.email,
       autorUID: user.uid,
       leido: false
     });
@@ -89,8 +108,13 @@ function startChat(user) {
 
       const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
 
+      // Obtener apodo del autor
+      let displayName = "Anon";
+      const userDoc = await getDoc(doc(db, "usuarios", note.autorUID));
+      if (userDoc.exists()) displayName = userDoc.data().nickname;
+
       div.innerHTML = `
-        <span class="author">${note.autor}:</span> 
+        <span class="author">${displayName}:</span> 
         <span class="text">${note.texto}</span>
         <span class="date">${dateStr}</span>
         ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
@@ -106,6 +130,8 @@ function startChat(user) {
     }
   });
 }
+
+
 
 
 
