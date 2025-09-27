@@ -38,7 +38,7 @@ const timeline = document.getElementById("timeline");
 loginBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  const nickname = nicknameInput.value.trim() || null;
+  const nickname = nicknameInput.value.trim();
 
   if (!email || !password) return alert("Completa correo y contraseña");
 
@@ -57,7 +57,7 @@ loginBtn.addEventListener("click", async () => {
       await createUserWithEmailAndPassword(auth, email, password);
       alert("Cuenta creada y logueada");
 
-      // Guardar nickname
+      // Guardar nickname si se ingresó
       if (nickname) {
         await updateProfile(auth.currentUser, { displayName: nickname });
       }
@@ -89,11 +89,7 @@ function startChat(user) {
     if (!text) return;
 
     // Obtener nickname o email
-    let nickname = user.displayName;
-    if (!nickname) {
-      nickname = prompt("Elige un apodo para el chat:", user.email) || user.email;
-      await updateProfile(user, { displayName: nickname });
-    }
+    let nickname = user.displayName || user.email;
 
     await addDoc(collection(db, "notas"), {
       texto: text,
@@ -135,21 +131,6 @@ function startChat(user) {
     }
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
