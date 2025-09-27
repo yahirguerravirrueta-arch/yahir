@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, deleteDoc } 
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Configuración Firebase
+// 🔥 Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA3Hpra0Ys2lXIYXB_C3PAC8dsVDd7cwyk",
   authDomain: "r-angell.firebaseapp.com",
@@ -13,24 +13,18 @@ const firebaseConfig = {
   measurementId: "G-HZMH0MCHY2"
 };
 
+// Inicializar Firebase y Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Nombre del usuario
-let userName = prompt("Escribe tu nombre o iniciales para el diario:");
+// Pedir nombre al usuario
+let userName = prompt("Ingresa tu nombre o iniciales para el diario:");
 if (!userName) userName = "Anon";
 
-// DOM
+// Referencias al DOM
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
 const timeline = document.getElementById("timeline");
-const chatBubble = document.getElementById("chat-bubble");
-const chatWindow = document.getElementById("chat-window");
-
-// Abrir/cerrar chat
-chatBubble.addEventListener("click", () => {
-  chatWindow.classList.toggle("hidden");
-});
 
 // Enviar mensaje
 form.addEventListener("submit", async (e) => {
@@ -38,65 +32,34 @@ form.addEventListener("submit", async (e) => {
   const text = input.value.trim();
   if (!text) return;
 
-  try {
-    await addDoc(collection(db, "notas"), {
-      texto: text,
-      fecha: serverTimestamp(),
-      leido: false,
-      autor: userName
-    });
-    input.value = "";
-  } catch (err) {
-    console.error("Error al enviar mensaje:", err);
-  }
+  await addDoc(collection(db, "notas"), {
+    texto: text,
+    fecha: serverTimestamp(),
+    autor: userName
+  });
+
+  input.value = "";
 });
 
-// Mostrar mensajes
+// Escuchar cambios en tiempo real y actualizar el timeline
 const q = query(collection(db, "notas"), orderBy("fecha", "asc"));
 onSnapshot(q, (snapshot) => {
   timeline.innerHTML = "";
-  snapshot.forEach((docSnap) => {
-    const note = docSnap.data();
+  snapshot.forEach(doc => {
+    const note = doc.data();
     const div = document.createElement("div");
     div.classList.add("note");
 
-    const date = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
-
-    // Diferenciar autor
-    if (note.autor === userName) div.classList.add("my-note");
-    else div.classList.add("other-note");
+    // Convertir fecha
+    const dateStr = note.fecha ? note.fecha.toDate().toLocaleString() : "Ahora";
 
     div.innerHTML = `
-      <p><strong>${note.autor}:</strong> ${note.texto}</p>
-      <span class="note-date">${date}</span>
-      ${note.leido ? "<span class='note-read'>✔ Visto</span>" : ""}
+      <span class="author">${note.autor}:</span> 
+      <span class="text">${note.texto}</span>
+      <span class="date">${dateStr}</span>
     `;
 
-    // Editar/borrar solo si eres el autor
-    if (note.autor === userName) {
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "✏️";
-      editBtn.onclick = async () => {
-        const newText = prompt("Editar nota:", note.texto);
-        if (newText) await updateDoc(doc(db, "notas", docSnap.id), { texto: newText });
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "🗑️";
-      deleteBtn.onclick = async () => {
-        if (confirm("¿Eliminar nota?")) await deleteDoc(doc(db, "notas", docSnap.id));
-      };
-
-      div.appendChild(editBtn);
-      div.appendChild(deleteBtn);
-    }
-
     timeline.appendChild(div);
-
-    // Marcar como leído si es de otro usuario
-    if (!note.leido && note.autor !== userName) {
-      updateDoc(doc(db, "notas", docSnap.id), { leido: true });
-    }
   });
 });
 
