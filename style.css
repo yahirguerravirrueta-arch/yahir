@@ -16,8 +16,14 @@ h1 {
   color: #e91e63;
 }
 
-input,
-textarea {
+.contador {
+  text-align: center;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+input, textarea {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
@@ -45,11 +51,34 @@ button:hover {
   gap: 15px;
 }
 
+/* Estilo base de las notas */
 .note {
+  border-radius: 15px;
+  padding: 12px 15px;
+  max-width: 75%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  animation: aparecer 0.3s ease-in-out;
+}
+
+/* Tus mensajes */
+.note.mine {
+  align-self: flex-end;
+  background: #f8bbd0;
+  color: #333;
+  border-bottom-right-radius: 0;
+}
+
+/* Mensajes de la otra persona */
+.note.theirs {
+  align-self: flex-start;
   background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-bottom-left-radius: 0;
+}
+
+/* Animación */
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .note .author {
@@ -69,6 +98,7 @@ button:hover {
   font-size: 0.9em;
   margin-left: 5px;
 }
+
 
 
 
