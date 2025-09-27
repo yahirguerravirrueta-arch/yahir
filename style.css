@@ -27,9 +27,9 @@ body {
   position: fixed;
   bottom: 80px;
   right: 20px;
-  width: 90%;         /* adaptativo */
-  max-width: 350px;   /* limita en pantallas grandes */
-  max-height: 80vh;   /* no salga de la pantalla */
+  width: 90%;
+  max-width: 400px;       /* máximo ancho en pantallas grandes */
+  max-height: 70vh;       /* no salga de la pantalla */
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
@@ -41,6 +41,7 @@ body {
   box-sizing: border-box;
 }
 
+/* Ocultar chat */
 .hidden {
   display: none;
 }
@@ -68,11 +69,6 @@ textarea {
   box-sizing: border-box;
 }
 
-input[type="file"] {
-  border-radius: 10px;
-}
-
-/* Botones */
 button {
   background: #e91e63;
   color: white;
@@ -106,12 +102,15 @@ button:hover {
   box-sizing: border-box;
 }
 
-/* Imágenes dentro de las notas */
-.note-img {
-  max-width: 100%;
-  border-radius: 10px;
-  margin-top: 5px;
-  display: block;
+/* Diferenciar mensajes por autor */
+.my-note {
+  background: #ffe0e9;
+  align-self: flex-end;
+}
+
+.other-note {
+  background: #ffffff;
+  align-self: flex-start;
 }
 
 /* Fecha de la nota */
@@ -145,37 +144,17 @@ button:hover {
   background: #d81b60;
 }
 
-/* Diferenciar mensajes por autor */
-.my-note {
-  background: #ffe0e9;
-  align-self: flex-end;
-}
-
-.other-note {
-  background: #ffffff;
-  align-self: flex-start;
-}
-
-/* Container general para otras secciones (si hay) */
-.container {
-  width: 95%;
-  max-width: 600px;
-  margin: auto;
-  padding: 10px;
-  box-sizing: border-box;
-}
-
 /* Ajustes para pantallas pequeñas */
-@media (max-width: 400px) {
+@media (max-width: 500px) {
   #chat-bubble {
-    padding: 10px;
-    font-size: 20px;
+    padding: 12px;
+    font-size: 22px;
   }
 
   #chat-window {
     width: 95%;
-    max-width: none;
-    right: 5px;
+    right: 2.5%;
     bottom: 70px;
+    max-width: none;
   }
 }
