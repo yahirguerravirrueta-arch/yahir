@@ -26,9 +26,8 @@ const auth = getAuth();
 // DOM references
 const loginDiv = document.getElementById("loginDiv");
 const chatDiv = document.getElementById("chatDiv");
-const emailInput = document.getElementById("emailInput");
+const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
-const nicknameInput = document.getElementById("nicknameInput");
 const loginBtn = document.getElementById("loginBtn");
 const form = document.getElementById("noteForm");
 const input = document.getElementById("noteInput");
@@ -36,32 +35,25 @@ const timeline = document.getElementById("timeline");
 
 // Login / Register
 loginBtn.addEventListener("click", async () => {
-  const email = emailInput.value.trim();
+  const username = usernameInput.value.trim();
   const password = passwordInput.value.trim();
-  const nickname = nicknameInput.value.trim();
+  
+  if (!username || !password) return alert("Completa nombre de usuario y contraseña");
 
-  if (!email || !password) return alert("Completa correo y contraseña");
+  // Crear un correo ficticio para Firebase Auth
+  const fakeEmail = `${username}@miapp.com`;
 
   try {
     // Intentar login
-    await signInWithEmailAndPassword(auth, email, password);
-
-    // Actualizar nickname si se ingresó
-    if (nickname) {
-      await updateProfile(auth.currentUser, { displayName: nickname });
-    }
-
+    await signInWithEmailAndPassword(auth, fakeEmail, password);
+    // Guardar nombre de usuario en displayName
+    await updateProfile(auth.currentUser, { displayName: username });
   } catch {
     // Si no existe, crear cuenta
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, fakeEmail, password);
       alert("Cuenta creada y logueada");
-
-      // Guardar nickname si se ingresó
-      if (nickname) {
-        await updateProfile(auth.currentUser, { displayName: nickname });
-      }
-
+      await updateProfile(auth.currentUser, { displayName: username });
     } catch (err) {
       return alert("Error: " + err.message);
     }
@@ -88,13 +80,12 @@ function startChat(user) {
     const text = input.value.trim();
     if (!text) return;
 
-    // Obtener nickname o email
-    let nickname = user.displayName || user.email;
+    const username = user.displayName || user.email;
 
     await addDoc(collection(db, "notas"), {
       texto: text,
       fecha: serverTimestamp(),
-      autor: nickname,
+      autor: username,
       autorUID: user.uid,
       leido: false
     });
@@ -131,7 +122,6 @@ function startChat(user) {
     }
   });
 }
-
 
 
 
