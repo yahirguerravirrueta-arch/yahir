@@ -16,10 +16,15 @@ h1 {
   color: #e91e63;
 }
 
-input, textarea {
-  width: 100%;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+textarea {
+  resize: none;
   padding: 10px;
-  margin-bottom: 10px;
   border-radius: 10px;
   border: 1px solid #ccc;
 }
@@ -51,23 +56,7 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.note .author {
-  font-weight: bold;
-  color: #e91e63;
-}
 
-.note .date {
-  display: block;
-  font-size: 0.8em;
-  color: #999;
-  margin-top: 5px;
-}
-
-.note-read {
-  color: green;
-  font-size: 0.9em;
-  margin-left: 5px;
-}
 
 
 
